@@ -2,9 +2,11 @@ import { Service } from "typedi";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { v4 } from "uuid";
+import { Attraction } from "../entity/Attraction";
 import { Trip } from "../entity/Trip";
 import { TripRoles } from "../entity/TripRoles";
 import { User } from "../entity/User";
+import { CreateAttractionInput } from "../modules/trip/activities/create/CreateAttractionInput";
 import { CreateTripInput } from "../modules/trip/create/CreateTripInput";
 import { redis } from "../redis";
 
@@ -16,6 +18,10 @@ export class TripService {
 
   @InjectRepository(TripRoles)
   private tripRoleRepository: Repository<TripRoles>; 
+
+  @InjectRepository(Attraction)
+  private attractionRepository: Repository<Attraction>; 
+
 
   async getAll(): Promise<Trip[]> {
     return await this.tripRepository.find();
@@ -86,6 +92,7 @@ export class TripService {
 
     return true;
   }
+  
 
   async acceptInvitation(token: string, user: User): Promise<boolean> {
     const tripId = await redis.get(token);
@@ -109,4 +116,30 @@ export class TripService {
     return true;
   }
 
+  /*
+  Add activity items to a trip
+  */
+
+  // If Member check means that the user can only be a member of a trip to add an attraction
+  async addAttraction(trip: Trip, user: User, attraction: CreateAttractionInput): Promise<Attraction | undefined> {
+    if(await this.isMember(trip, user) || await this.isCreator(trip, user)) {
+      const newAttraction = new Attraction();
+      newAttraction.name = attraction.name;
+      newAttraction.url = attraction.url;
+      newAttraction.startDate = attraction.startDate;
+      newAttraction.endDate = attraction.endDate;
+
+      trip.attractions = Promise.resolve([...await trip.attractions, newAttraction]);
+
+      await this.attractionRepository.save(newAttraction);
+      await this.tripRepository.save(trip);
+
+      console.log("Testing")
+      console.log(newAttraction)
+      
+      return newAttraction;
+    }
+
+    return undefined;
+  }
 }
