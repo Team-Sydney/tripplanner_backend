@@ -14,7 +14,7 @@ export class Transportation extends BaseEntity {
   @Field()
   name: string;
 
-  @Column({ type: "text" })
+  @Column({ type: "text", nullable: true })
   @Field()
   url: string;
 
@@ -26,7 +26,7 @@ export class Transportation extends BaseEntity {
   @Field()
   endDate: Date;
 
-  @ManyToMany(() => User)
+  @ManyToMany(() => User, { eager: true })
   @JoinTable()
   @Field(() => [User])
   pendingApproval: User[]

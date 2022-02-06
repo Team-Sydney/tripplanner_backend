@@ -5,10 +5,12 @@ import { InjectRepository } from "typeorm-typedi-extensions";
 import { v4 } from "uuid";
 import { Attraction } from "../entity/Attraction";
 import { Hotel } from "../entity/Hotel";
+import { Transportation } from "../entity/Transportation";
 import { Trip } from "../entity/Trip";
 import { TripRoles } from "../entity/TripRoles";
 import { User } from "../entity/User";
 import { CreateAttractionInput } from "../modules/trip/activities/create/CreateAttractionInput";
+import { CreateTransportInput } from "../modules/trip/activities/create/CreateTransportInput";
 import { CreateTripInput } from "../modules/trip/create/CreateTripInput";
 import { redis } from "../redis";
 
@@ -23,6 +25,9 @@ export class TripService {
 
   @InjectRepository(Attraction)
   private attractionRepository: Repository<Attraction>;
+
+  @InjectRepository(Transportation)
+  private transportationRepository: Repository<Transportation>;
 
   @InjectRepository(Hotel)
   private hotelRepository: Repository<Attraction>;
@@ -187,10 +192,64 @@ export class TripService {
     return undefined;
   }
 
-  /*
-  Add hotel items to a trip
-  */
+  /**
+   * Adds a new transportation to trip
+   * @param trip The trip to add the transportation to
+   * @param user The user who is adding the transportation
+   * @param transportation The transportation to add
+   * @returns The newly created transportation
+   */
+  async addTransportation(trip: Trip, user: User, transportation: CreateTransportInput): Promise<Transportation | undefined> {
+    if (await this.isMember(trip, user) || await this.isCreator(trip, user)) {
+      const newTransportation = new Transportation();
+      newTransportation.name = transportation.name;
+      newTransportation.url = transportation.url;
+      newTransportation.startDate = transportation.startDate;
+      newTransportation.endDate = transportation.endDate;
 
+      // Add trip users to pending approval list
+      newTransportation.pendingApproval = await this.addUsersToApprovers(trip);
+
+      trip.transportations = Promise.resolve([...await trip.transportations, newTransportation]);
+
+      await this.transportationRepository.save(newTransportation);
+      await this.tripRepository.save(trip);
+      
+      return newTransportation;
+    }
+
+    return undefined;
+  }  
+
+  /**
+   * Approve transportation for trip
+   * @param transportation The transportation to approve
+   * @param user The user who is approving the transportation
+   * @returns Whether the user approved the transportation
+   */
+  async approveTransportation(transportation: Transportation, user: User): Promise<boolean> {
+    if(transportation.pendingApproval.find((user: User) => user.id === user.id)) {
+      let index = transportation.pendingApproval.map(function (user) {
+        return user.id
+      }).indexOf(user.id);
+
+      transportation.pendingApproval.splice(index, 1);
+      transportation.approvedBy = Promise.resolve([... await transportation.approvedBy, user]);
+      await this.transportationRepository.save(transportation);
+      
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Adds a new hotel to the trip
+   * @param trip A trip to add a user to
+   * @param user The user to add to the trip
+   * @param hotel The hotel to add to the trip
+   * @returns The hotel that was added to the trip
+   */
   async addHotel(trip: Trip, user: User, hotel: CreateHotelInput): Promise<Hotel | undefined> {
     if (await this.isMember(trip, user) || await this.isCreator(trip, user)) {
       const newHotel = new Hotel();

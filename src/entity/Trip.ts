@@ -2,6 +2,7 @@ import { Field, ID, ObjectType } from "type-graphql";
 import { BaseEntity, Column, Entity, JoinTable, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Attraction } from "./Attraction";
 import { Hotel } from "./Hotel";
+import { Transportation } from "./Transportation";
 import { TripRoles } from "./TripRoles";
 @ObjectType()
 @Entity()
@@ -40,4 +41,9 @@ export class Trip extends BaseEntity {
   @JoinTable()
   @Field(() => [Hotel])
   hotels: Promise<Hotel[]>
+
+  @OneToMany(() => Transportation, transportation => transportation.trip, { eager: true })
+  @JoinTable()
+  @Field(() => [Transportation])
+  transportations: Promise<Transportation[]>
 }
