@@ -1,5 +1,6 @@
 import { Field, ID, ObjectType } from "type-graphql";
-import { BaseEntity, Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
+import { BaseEntity, Column, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Trip } from "./Trip";
 import { User } from "./User";
 
 @ObjectType()
@@ -25,17 +26,17 @@ export class Transportation extends BaseEntity {
   @Field()
   endDate: Date;
 
-  @ManyToMany(() => User, { eager: true })
+  @ManyToMany(() => User)
   @JoinTable()
   @Field(() => [User])
   pendingApproval: User[]
 
-  @ManyToMany(() => User, { eager: true })
+  @ManyToMany(() => User)
   @JoinTable()
   @Field(() => [User])
-  approvedBy: User[]
+  approvedBy: Promise<User[]>
 
-  @Column()
-  @Field(() => Boolean)    
-  approved: boolean
+  @ManyToOne(() => Trip)
+  @JoinTable()
+  trip: Trip
 }

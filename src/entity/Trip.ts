@@ -1,5 +1,6 @@
 import { Field, ID, ObjectType } from "type-graphql";
 import { BaseEntity, Column, Entity, JoinTable, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Attraction } from "./Attraction";
 import { TripRoles } from "./TripRoles";
 @ObjectType()
 @Entity()
@@ -28,4 +29,9 @@ export class Trip extends BaseEntity {
   @JoinTable()
   @Field(() => [TripRoles])
   tripUsers: Promise<TripRoles[]>
+
+  @OneToMany(() => Attraction, attraction => attraction.trip)
+  @JoinTable()
+  @Field(() => [Attraction])
+  attractions: Promise<Attraction[]>
 }
