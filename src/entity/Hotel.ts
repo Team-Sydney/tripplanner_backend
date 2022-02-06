@@ -5,7 +5,7 @@ import { User } from "./User";
 
 @ObjectType()
 @Entity()
-export default class Hotel extends BaseEntity {
+export class Hotel extends BaseEntity {
   @Field(() => ID)
   @PrimaryGeneratedColumn()
   id: number;

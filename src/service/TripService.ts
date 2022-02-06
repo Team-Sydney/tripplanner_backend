@@ -1,8 +1,10 @@
+import { CreateHotelInput } from "src/modules/trip/activities/create/CreateHotelInput";
 import { Service } from "typedi";
 import { Repository } from "typeorm";
 import { InjectRepository } from "typeorm-typedi-extensions";
 import { v4 } from "uuid";
 import { Attraction } from "../entity/Attraction";
+import { Hotel } from "../entity/Hotel";
 import { Trip } from "../entity/Trip";
 import { TripRoles } from "../entity/TripRoles";
 import { User } from "../entity/User";
@@ -14,23 +16,26 @@ import { redis } from "../redis";
 export class TripService {
 
   @InjectRepository(Trip)
-  private tripRepository: Repository<Trip>; 
+  private tripRepository: Repository<Trip>;
 
   @InjectRepository(TripRoles)
-  private tripRoleRepository: Repository<TripRoles>; 
+  private tripRoleRepository: Repository<TripRoles>;
 
   @InjectRepository(Attraction)
-  private attractionRepository: Repository<Attraction>; 
+  private attractionRepository: Repository<Attraction>;
+
+  @InjectRepository(Hotel)
+  private hotelRepository: Repository<Attraction>;
 
 
   async getAll(): Promise<Trip[]> {
     return await this.tripRepository.find();
   }
-   
+
   async findById(id: number) {
     const trip = await this.tripRepository.findOne(id);
 
-    if(!trip) {
+    if (!trip) {
       throw new Error("Trip not found");
     }
 
@@ -63,12 +68,12 @@ export class TripService {
     tripRole.trip = Promise.resolve(trip);
 
     console.log(trip);
-    
+
     await this.tripRepository.save(trip);
     await this.tripRoleRepository.save(tripRole);
 
     return trip;
-  } 
+  }
 
   async isMember(trip: Trip, user: User): Promise<boolean> {
     const tripRole = await this.tripRoleRepository.findOne({
@@ -83,7 +88,7 @@ export class TripService {
   }
 
   async sendInvitationToMember(trip: Trip, creatorUser: User, userToInvite: User): Promise<boolean> {
-    if(await this.isCreator(trip, creatorUser) || await !this.isMember(trip, userToInvite)) {  
+    if (await this.isCreator(trip, creatorUser) || await !this.isMember(trip, userToInvite)) {
       const token = v4();
       await redis.set("trip-invite-" + token, trip.id, "ex", 60 * 60 * 24);
       console.log("Token to accept invite: trip-invite-" + token);
@@ -92,18 +97,18 @@ export class TripService {
 
     return true;
   }
-  
+
 
   async acceptInvitation(token: string, user: User): Promise<boolean> {
     const tripId = await redis.get(token);
 
-    if(!tripId) {
+    if (!tripId) {
       return false;
     } else {
       const trip = await this.tripRepository.findOne(tripId);
       await redis.del("trip-invite-" + token);
 
-      if(trip) {
+      if (trip) {
         const tripRole = new TripRoles();
         tripRole.role = "Member";
         tripRole.user = Promise.resolve(user);
@@ -122,7 +127,7 @@ export class TripService {
 
   // If Member check means that the user can only be a member of a trip to add an attraction
   async addAttraction(trip: Trip, user: User, attraction: CreateAttractionInput): Promise<Attraction | undefined> {
-    if(await this.isMember(trip, user) || await this.isCreator(trip, user)) {
+    if (await this.isMember(trip, user) || await this.isCreator(trip, user)) {
       const newAttraction = new Attraction();
       newAttraction.name = attraction.name;
       newAttraction.url = attraction.url;
@@ -136,8 +141,34 @@ export class TripService {
 
       console.log("Testing")
       console.log(newAttraction)
-      
+
       return newAttraction;
+    }
+
+    return undefined;
+  }
+
+  /*
+  Add hotel items to a trip
+  */
+
+  async addHotel(trip: Trip, user: User, hotel: CreateHotelInput): Promise<Hotel | undefined> {
+    if (await this.isMember(trip, user) || await this.isCreator(trip, user)) {
+      const newHotel = new Hotel();
+      newHotel.name = hotel.name;
+      newHotel.url = hotel.url;
+      newHotel.startDate = hotel.startDate;
+      newHotel.endDate = hotel.endDate;
+
+      trip.hotels = Promise.resolve([...await trip.hotels, newHotel]);
+
+      await this.hotelRepository.save(newHotel);
+      await this.tripRepository.save(trip);
+
+      console.log("Testing")
+      console.log(newHotel)
+
+      return newHotel;
     }
 
     return undefined;
