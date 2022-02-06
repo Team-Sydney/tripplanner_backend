@@ -58,7 +58,7 @@ const main = async () => {
         client: redis
       }),
       name: "qid",
-      secret: "HACKVILLE2022",
+      secret: "duas890du98uvxcivno0894f",
       resave: false,
       saveUninitialized: false,
       cookie: {
