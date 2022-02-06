@@ -26,7 +26,7 @@ export class Attraction extends BaseEntity {
   @Field()
   endDate: Date;
 
-  @ManyToMany(() => User)
+  @ManyToMany(() => User, { eager: true })
   @JoinTable()
   @Field(() => [User])
   pendingApproval: User[]
@@ -39,9 +39,4 @@ export class Attraction extends BaseEntity {
   @ManyToOne(() => Trip)
   @JoinTable()
   trip: Trip
-  
-  @Field(() => Boolean)    
-  async approved(): Promise<boolean> {
-    return true;
-  }
 }
