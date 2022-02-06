@@ -12,9 +12,9 @@ import session from "express-session";
 import { redis } from "./redis";
 import cors from "cors";
 import { Container } from "typeorm-typedi-extensions";
-import passport, { Profile } from "passport";
-import { google } from "./google";
-import { Strategy, VerifyCallback } from "passport-google-oauth20";
+// import passport, { Profile } from "passport";
+// import { google } from "./google";
+// import { Strategy, VerifyCallback } from "passport-google-oauth20";
 
 declare module 'express-session' {
   interface SessionData {
@@ -49,34 +49,26 @@ const main = async () => {
 
   const app = express();
   const RedisStore = connectRedis(session);
-<<<<<<< HEAD
-
-  app.use(cors({
-    credentials: true,
-    origin: 'http://localhost:3000'
-  }));
-=======
   
   app.use(cors());
->>>>>>> f5398ae0ce1929801baf03c595b9b1ba8bef5f44
 
-  /**
-   * Passport Setup
-   */
-  app.use(passport.initialize())
+  // /**
+  //  * Passport Setup
+  //  */
+  // app.use(passport.initialize())
 
-  passport.use(
-    new Strategy(
-      google,
-      async (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
-        console.log(accessToken)
-        console.log(refreshToken)
-        console.log(profile)
-        console.log("Profile: " + profile.id)
-        return done(null, profile);
-      }
-    )
-  )
+  // passport.use(
+  //   new Strategy(
+  //     google,
+  //     async (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
+  //       console.log(accessToken)
+  //       console.log(refreshToken)
+  //       console.log(profile)
+  //       console.log("Profile: " + profile.id)
+  //       return done(null, profile);
+  //     }
+  //   )
+  // )
 
   app.use(
     session({
