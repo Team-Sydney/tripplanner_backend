@@ -18,8 +18,15 @@ export class CreateTripResolver {
   async createTrip(
     @Arg("input") input: CreateTripInput,
     @Ctx() ctx: Context
-  ): Promise<Trip> {
+  ): Promise<Trip | undefined> {
+    if (!ctx.req.session!.userId) {
+      return undefined;
+    }
+
     const user = await this.userService.findById(ctx.req.session!.userId);
+
+    console.log("User being added?")
+    console.log(user)
 
     return await this.tripService.createTrip(user, input);
   }
