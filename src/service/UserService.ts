@@ -10,11 +10,11 @@ export class UserService {
   @InjectRepository(User)
   private userRepository: Repository<User>; 
 
-  async findByEmail(email: string): Promise<User> {
+  async findByEmail(email: string): Promise<User | undefined> {
     const user = await this.userRepository.findOne({ where: { email: email } });
 
     if(!user) {
-      throw new Error("User could not be found.")
+      return undefined;
     }
 
     return user;
