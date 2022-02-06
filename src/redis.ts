@@ -1,10 +1,10 @@
 import Redis from "ioredis";
 
 export const redis = new Redis({
-  host: "localhost",
-  // username: process.env.REDIS_USERNAME,
-  // password: process.env.REDIS_PASSWORD,
-  port: 6379,
-  // tls: {},
-  // connectTimeout: 30000,
+  host: process.env.REDIS_HOST,
+  username: process.env.REDIS_USERNAME,
+  password: process.env.REDIS_PASSWORD,
+  port: parseInt(process.env.REDIS_PORT as string),
+  tls: {},
+  connectTimeout: 30000,
 });
