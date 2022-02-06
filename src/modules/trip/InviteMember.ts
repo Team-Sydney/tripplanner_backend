@@ -1,5 +1,6 @@
 import { Arg, Ctx, Mutation, Resolver } from "type-graphql";
 import { Service } from "typedi";
+import { User } from "../../entity/User";
 import { TripService } from "../../service/TripService";
 import { UserService } from "../../service/UserService";
 import { Context } from "../../type/Context";
@@ -18,10 +19,15 @@ export class InviteMemberResolver {
     @Arg("tripId") tripId: number,
     @Arg("email") email: string,
   ): Promise<boolean> {
+    if (!ctx.req.session!.userId) {
+      return false;
+    }
+
+
     const userToInvite = await this.userService.findByEmail(email);
     const creatorUser = await this.userService.findById(ctx.req.session!.userId);
     const trip = await this.tripService.findById(tripId);
 
-    return await this.tripService.sendInvitationToMember(trip, creatorUser, userToInvite);
+    return await this.tripService.sendInvitationToMember(trip, creatorUser, userToInvite as User);
   }
 }
