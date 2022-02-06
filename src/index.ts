@@ -12,12 +12,15 @@ import session from "express-session";
 import { redis } from "./redis";
 import cors from "cors";
 import { Container } from "typeorm-typedi-extensions";
+import passport, { Profile } from "passport";
+import { google } from "./google";
+import { Strategy, VerifyCallback } from "passport-google-oauth20";
 
 declare module 'express-session' {
   interface SessionData {
-      userId: any;
+    userId: any;
   }
-} 
+}
 
 const main = async () => {
   useContainer(Container);
@@ -39,15 +42,41 @@ const main = async () => {
     },
     context: ({ req, res }: any) => ({ req, res }),
     plugins: [
-        ApolloServerPluginLandingPageGraphQLPlayground(),
+      ApolloServerPluginLandingPageGraphQLPlayground(),
     ],
   });
   await apolloServer.start();
 
   const app = express();
   const RedisStore = connectRedis(session);
+<<<<<<< HEAD
+
+  app.use(cors({
+    credentials: true,
+    origin: 'http://localhost:3000'
+  }));
+=======
   
   app.use(cors());
+>>>>>>> f5398ae0ce1929801baf03c595b9b1ba8bef5f44
+
+  /**
+   * Passport Setup
+   */
+  app.use(passport.initialize())
+
+  passport.use(
+    new Strategy(
+      google,
+      async (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
+        console.log(accessToken)
+        console.log(refreshToken)
+        console.log(profile)
+        console.log("Profile: " + profile.id)
+        return done(null, profile);
+      }
+    )
+  )
 
   app.use(
     session({
@@ -66,7 +95,7 @@ const main = async () => {
     })
   );
 
-  apolloServer.applyMiddleware({ app , cors: false });
+  apolloServer.applyMiddleware({ app, cors: false });
 
   app.listen(4000, () => {
     console.log("Server started on http://localhost:4000/graphql");

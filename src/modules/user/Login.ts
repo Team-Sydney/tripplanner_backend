@@ -9,19 +9,19 @@ import { UserResponse } from "./response/UserResponse";
 export class LoginResolver {
   constructor(
     private readonly userService: UserService
-  ) {}
-  
-  @Mutation(() => UserResponse, { nullable: true})
+  ) { }
+
+  @Mutation(() => UserResponse, { nullable: true })
   async login(
     @Arg("email") email: string,
     @Arg("firstName", { nullable: true }) firstName: string,
     @Arg("lastName", { nullable: true }) lastName: string,
     @Ctx() ctx: Context
-  ): Promise<UserResponse>{
+  ): Promise<UserResponse> {
     const user = await this.userService.findByEmail(email);
 
-    if(!user) {
-      const user = await this.userService.registerUser({email, firstName, lastName});
+    if (!user) {
+      const user = await this.userService.registerUser({ email, firstName, lastName });
 
       ctx.req.session!.userId = user.id;
 
@@ -44,5 +44,19 @@ export class LoginResolver {
       user
     };
   }
+
+  // @Mutation(() => UserResponse, { nullable: true })
+  // async login(
+  //   @Arg("token") token: string,
+  //   @Ctx() ctx: Context
+  // ): Promise<UserResponse> {
+  //   const user = await this.userService.registerUserWithGoogle(token);
+
+  //   ctx.req.session!.userId = user.id;
+
+  //   return {
+  //     user
+  //   }
+  // }
 
 }
