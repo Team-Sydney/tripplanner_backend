@@ -31,7 +31,7 @@ export class Trip extends BaseEntity {
   @Field(() => [TripRoles])
   tripUsers: Promise<TripRoles[]>
 
-  @OneToMany(() => Attraction, attraction => attraction.trip)
+  @OneToMany(() => Attraction, attraction => attraction.trip, { eager: true })
   @JoinTable()
   @Field(() => [Attraction])
   attractions: Promise<Attraction[]>

@@ -125,6 +125,42 @@ export class TripService {
   Add activity items to a trip
   */
 
+  async findAttractionById(id: number): Promise<Attraction> {
+    const attraction = await this.attractionRepository.findOne(id);
+    
+    if(!attraction) {
+      throw new Error("Attraction not found");
+    }
+
+    return attraction;
+  }
+
+  async addUsersToApprovers(trip: Trip): Promise<User[]> {
+    const users = [] as any;
+
+    for(const tripRole of await trip.tripUsers) {
+      users.push(await tripRole.user);
+    }
+
+    return users;
+  }
+
+  async approveAttraction(attraction: Attraction, user: User): Promise<boolean> {
+    if(attraction.pendingApproval.find((user: User) => user.id === user.id)) {
+      let index = attraction.pendingApproval.map(function (user) {
+        return user.id
+      }).indexOf(user.id);
+
+      attraction.pendingApproval.splice(index, 1);
+      attraction.approvedBy = Promise.resolve([... await attraction.approvedBy, user]);
+      await this.attractionRepository.save(attraction);
+      
+      return true;
+    }
+
+    return false;
+  }
+
   // If Member check means that the user can only be a member of a trip to add an attraction
   async addAttraction(trip: Trip, user: User, attraction: CreateAttractionInput): Promise<Attraction | undefined> {
     if (await this.isMember(trip, user) || await this.isCreator(trip, user)) {
@@ -134,14 +170,17 @@ export class TripService {
       newAttraction.startDate = attraction.startDate;
       newAttraction.endDate = attraction.endDate;
 
+      // Add trip users to pending approval list
+      newAttraction.pendingApproval = await this.addUsersToApprovers(trip);
+
+      console.log("Users: ");
+      console.log(newAttraction.pendingApproval);
+
       trip.attractions = Promise.resolve([...await trip.attractions, newAttraction]);
 
       await this.attractionRepository.save(newAttraction);
       await this.tripRepository.save(trip);
-
-      console.log("Testing")
-      console.log(newAttraction)
-
+      
       return newAttraction;
     }
 

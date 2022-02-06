@@ -49,11 +49,16 @@ const main = async () => {
 
   const app = express();
   const RedisStore = connectRedis(session);
+<<<<<<< HEAD
 
   app.use(cors({
     credentials: true,
     origin: 'http://localhost:3000'
   }));
+=======
+  
+  app.use(cors());
+>>>>>>> f5398ae0ce1929801baf03c595b9b1ba8bef5f44
 
   /**
    * Passport Setup

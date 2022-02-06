@@ -14,19 +14,28 @@ export class LoginResolver {
   @Mutation(() => UserResponse, { nullable: true })
   async login(
     @Arg("email") email: string,
+    @Arg("firstName", { nullable: true }) firstName: string,
+    @Arg("lastName", { nullable: true }) lastName: string,
     @Ctx() ctx: Context
   ): Promise<UserResponse> {
     const user = await this.userService.findByEmail(email);
 
     if (!user) {
+      const user = await this.userService.registerUser({ email, firstName, lastName });
+
+      ctx.req.session!.userId = user.id;
+
       return {
-        errors: [
-          {
-            field: "email",
-            message: "An account with that email does not exist."
-          }
-        ]
-      };
+        user
+      }
+      // return {
+      //   errors: [
+      //     {
+      //       field: "email",
+      //       message: "An account with that email does not exist."
+      //     }
+      //   ]
+      // };
     }
 
     ctx.req.session!.userId = user.id;
